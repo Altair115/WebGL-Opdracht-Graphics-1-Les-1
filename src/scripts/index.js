@@ -2,6 +2,7 @@ import './gl-matrix-2.2.1';
 
 
 var gl;
+var XasRotate = 0;
 
 function initGL(canvas) {
     try {
@@ -102,7 +103,6 @@ function setMatrixUniforms() {
 
 
 var triangleVertexPositionBuffer;
-var squareVertexPositionBuffer;
 
 function initBuffers() {
     //Create the buffer
@@ -111,32 +111,26 @@ function initBuffers() {
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
     //Create the vertices
     var vertices = [
-        0.0, 1.0, 0.0,
-        -1.0, -1.0, 0.0,
-        1.0, -1.0, 0.0
+        0.0, 0.0, 0.0,
+        1.0, 1.0, 0.0,
+        2.25, 1.0, 0.0,
+        3.25, 0.0, 0.0,
+        3.25, -1.25, 0.0,
+        2.25, -2.25, 0.0,
+        1.0, -2.25, 0.0,
+        0.0, -1.25, 0.0
     ];
     //Put the vertex data into the current buffer in use (triangleVertexPositionBuffer)
     gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
     //Log the number of items (vertices) and the number of floats that make up a vertex (3)
     triangleVertexPositionBuffer.itemSize = 3;
-    triangleVertexPositionBuffer.numItems = 3;
-
-    //Rinse and repeat
-    squareVertexPositionBuffer = gl.createBuffer();
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    vertices = [
-        1.0, 1.0, 0.0,
-        -1.0, 1.0, 0.0,
-        1.0, -1.0, 0.0,
-        -1.0, -1.0, 0.0
-    ];
-    gl.bufferData(gl.ARRAY_BUFFER, new Float32Array(vertices), gl.STATIC_DRAW);
-    squareVertexPositionBuffer.itemSize = 3;
-    squareVertexPositionBuffer.numItems = 4;
+    triangleVertexPositionBuffer.numItems = 8;
 }
 
 
 function drawScene() {
+
+    XasRotate += 0.1;
     gl.viewport(0, 0, gl.viewportWidth, gl.viewportHeight);
     gl.clear(gl.COLOR_BUFFER_BIT | gl.DEPTH_BUFFER_BIT);
 
@@ -145,8 +139,10 @@ function drawScene() {
 
     mat4.identity(mvMatrix);
 
+    mat4.rotateZ(mvMatrix,mvMatrix,XasRotate);
     //Do the translation and update the model's position
-    mat4.translate(mvMatrix, mvMatrix, [-1.5, 0.0, -5.4]);
+    mat4.translate(mvMatrix, mvMatrix, [-1.625, 0.625, -7.5]);
+
     //Current buffer in use will be triangleVertexPositionBuffer
     gl.bindBuffer(gl.ARRAY_BUFFER, triangleVertexPositionBuffer);
     //This line sets the shaderProgram's vertexPositionAttribute to the currently bound buffer (the triangleVertexPositionBuffer)
@@ -154,20 +150,8 @@ function drawScene() {
     //This code uploads the projection- and model-view matrix into the shaders
     setMatrixUniforms();
     //This draws the vertices with the setup state
-    gl.drawArrays(gl.TRIANGLES, 0, triangleVertexPositionBuffer.numItems);
+    gl.drawArrays(gl.TRIANGLE_FAN, 0, triangleVertexPositionBuffer.numItems);
 
-
-    var z = 0;
-
-    if (farAway) {
-        z = -10;
-    }
-
-    mat4.translate(mvMatrix, mvMatrix, [3.0, 0.0, z]);
-    gl.bindBuffer(gl.ARRAY_BUFFER, squareVertexPositionBuffer);
-    gl.vertexAttribPointer(shaderProgram.vertexPositionAttribute, squareVertexPositionBuffer.itemSize, gl.FLOAT, false, 0, 0);
-    setMatrixUniforms();
-    gl.drawArrays(gl.TRIANGLE_STRIP, 0, squareVertexPositionBuffer.numItems);
 }
 
 
@@ -180,7 +164,7 @@ function webGLStart() {
     initBuffers();
 
     //Set the backbround color to black
-    gl.clearColor(0.0, 0.0, 0.0, 1.0);
+    gl.clearColor(0.2, 0.2, 0.2, 1.0);
     //Set WebGL to check if a model is behind another
     gl.enable(gl.DEPTH_TEST);
 
@@ -192,7 +176,7 @@ function webGLStart() {
         drawScene();
         farAway = !farAway;
 
-        setTimeout(draw, 1000);
+        setTimeout(draw, 16);
     }
 
     //Initial setTimeout to jumpstart the draw function above
